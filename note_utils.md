@@ -3,6 +3,7 @@ erlang学习笔记－小工具
 
 observer
 ---
+
 R17版本以上的Erlang才有,将以前版本的tv，appmon，pman，toolbar等工具集成到一起，启动命令为：
 > obserber:start().
 
@@ -10,6 +11,7 @@ R17版本以上的Erlang才有,将以前版本的tv，appmon，pman，toolbar等
 
 SASL
 ---
+
 SASL是Erlang非常实用的日志、消息工具，启动方式：
 > application:start(sasl).
 
@@ -22,6 +24,7 @@ SASL是Erlang非常实用的日志、消息工具，启动方式：
 
 热更
 ---
+
 参考资料：https://blog.csdn.net/mycwq/article/details/13290757
 
 1. 第一种热更新方式：
