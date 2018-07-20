@@ -5,7 +5,7 @@ observer
 ---
 
 R17版本以上的Erlang才有,将以前版本的tv，appmon，pman，toolbar等工具集成到一起，启动命令为：
-> obserber:start().
+> observer:start().
 
 利用这个工具的可以很方便的监控整个应用的状态。应用运行情况、负载、各个进程情况、应用中的表等都可以监控，非常方便。
 
