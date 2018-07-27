@@ -47,4 +47,4 @@ Modules 是进程依赖的模块,这个信息只有在代码热更新的时候�
 
 如果子进程是gen_event Modules的值是 dynamic;
 
-关于dynamic参数余锋有一篇专门的分析:Erlang supervisor规格的dynamic行为分析 http://blog.yufeng.info/archives/1455
+关于dynamic参数余锋有一篇专门的分析:[Erlang supervisor规格的dynamic行为分析](http://blog.yufeng.info/archives/1455)
