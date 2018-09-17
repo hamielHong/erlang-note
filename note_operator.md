@@ -44,5 +44,5 @@ erlang学习笔记－运算符
 |and|逻辑与|
 |or|逻辑或|
 |xor|逻辑异或|
-|andalso|短路 逻辑或|
+|andalso|短路 逻辑与|
 |orelse|短路 逻辑或|
