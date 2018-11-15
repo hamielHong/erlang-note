@@ -13,7 +13,6 @@ erlang学习笔记－genserver的timeout事件总结
 
 三、
 >Module：init（Args）->Result={ok,State,Timeout}.
-
 >Module:handle_call(Request,From,State)—>Result={reply，Reply，NewState，Timeout}.
 
 此处的两个返回结果的timeout都是指gen_server在Timeout时间内没有收到一个请求或一条消息时，gen_server会抛出timeout事件退出，此时需要handle_info（timeout，State）来捕获此timeout事件。

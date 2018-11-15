@@ -69,7 +69,7 @@ valid_datetime(_) ->
 
 valid_time({H, M, S}) -> valid_time(H, M, S).
 valid_time(H, M, S) when H > 0, H < 24,
-                         M >= 0, M < 60,
-                         S >= 0, S < 60 -> true;
+                        M >= 0, M < 60,
+                        S >= 0, S < 60 -> true;
 valid_time(_, _, _) -> false.
 ```
