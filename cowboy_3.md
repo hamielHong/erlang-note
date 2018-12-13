@@ -253,7 +253,7 @@ gen_server 我们已经非常熟悉了，下面的接口导出和回调函数导
 
 注意一下，这里可能跟我们平时写的代码有些区别，用到了 :: 字段类型 进行类型声明
 
-关于类型声明，主要是用于使用 dialyzer 对代码进行静态分析，在编译期就可以发现代码中的很多错误，现在游戏项目中还没有使用 dialyzer 所以也就没有声明，个人建议养成类型声明的习惯
+关于类型声明，主要是起到注释的作用和用于使用 dialyzer 对代码进行静态分析，在编译期就可以发现代码中的很多错误，现在游戏项目中还没有使用 dialyzer 所以也就没有声明，个人建议养成类型声明的习惯
 
 API
 ---
@@ -282,7 +282,9 @@ rfc1123(DateTime) ->
 
 rfc1123/0 和 rfc1123/1 这两个API很奇怪，命名不是我们常见的用接口的操作的英文进行命名，其实 rfc1123 指的是一个国际通用的时间格式规范 RFC-1123，大概就是这样表示日期：
 
-ddd,dd MMM yyyy,HH':'mm':'ss 'GMT'
+ddd, dd MMM yyyy,HH':'mm':'ss 'GMT'
+
+例子："Sat, 14 May 2011 14:25:33 GMT"
 
 所以 rfc1123/0 的作用是返回当前的日期和时间，并格式化为符合RFC-1123规范的表示形式
 
@@ -317,13 +319,13 @@ init/1 gen_server的初始化回调方法
 ``` erlang
 -spec init([]) -> {ok, #state{}}.
 init([]) ->
-	?MODULE = ets:new(?MODULE, [set, protected,
-		named_table, {read_concurrency, true}]),
-	T = erlang:universaltime(),
-	B = update_rfc1123(<<>>, undefined, T),
-	TRef = erlang:send_after(1000, self(), update),
-	ets:insert(?MODULE, {rfc1123, B}),
-	{ok, #state{universaltime=T, rfc1123=B, tref=TRef}}.
+    ?MODULE = ets:new(?MODULE, [set, protected,
+        named_table, {read_concurrency, true}]),
+    T = erlang:universaltime(),
+    B = update_rfc1123(<<>>, undefined, T),
+    TRef = erlang:send_after(1000, self(), update),
+    ets:insert(?MODULE, {rfc1123, B}),
+    {ok, #state{universaltime=T, rfc1123=B, tref=TRef}}.
 ```
 
 这个方法创建一个命名ETS表，这种创建的写法很有意思，当创建失败时，返回值无法匹配表名，会直接导致进程崩溃，交给监督者重启
@@ -339,15 +341,15 @@ handle_info/2
 ``` erlang
 -spec handle_info(any(), State) -> {noreply, State} when State::#state{}.
 handle_info(update, #state{universaltime=Prev, rfc1123=B1, tref=TRef0}) ->
-	%% Cancel the timer in case an external process sent an update message.
-	_ = erlang:cancel_timer(TRef0),
-	T = erlang:universaltime(),
-	B2 = update_rfc1123(B1, Prev, T),
-	ets:insert(?MODULE, {rfc1123, B2}),
-	TRef = erlang:send_after(1000, self(), update),
-	{noreply, #state{universaltime=T, rfc1123=B2, tref=TRef}};
+    %% Cancel the timer in case an external process sent an update message.
+    _ = erlang:cancel_timer(TRef0),
+    T = erlang:universaltime(),
+    B2 = update_rfc1123(B1, Prev, T),
+    ets:insert(?MODULE, {rfc1123, B2}),
+    TRef = erlang:send_after(1000, self(), update),
+    {noreply, #state{universaltime=T, rfc1123=B2, tref=TRef}};
 handle_info(_Info, State) ->
-	{noreply, State}.
+    {noreply, State}.
 ```
 
 这个模块使用 handle_info/2 只有一个作用，就是用于更新时间，通过每次更新时间时调用 erlang:send_after(1000, self(), update) 相当于设置了一个 1000ms 的定时器，不断更新时间
@@ -368,4 +370,88 @@ update_rfc1123/3 的匹配中，从上到下不同分支分别是为了适应没
 小结
 ---
 
-其实这种时间的处理方式在我们游戏中也在使用，不过在细微处有些许不同，比如取时间调用的函数，定时器Ref的设置，ETS表的参数等，接下来尝试一个一个比较，总结
+其实这种时间的处理方式在我们游戏中也在使用，不过在细微处有些许不同，比如取时间调用的函数，定时器Ref的设置，ETS表的参数等，接下来进行一下比较
+
+时间存储相关
+---
+
+cowboy_clock.erl 模块中通过 erlang:universaltime() 方法来获取时间，而我们的游戏中是用 os:timestamp() 获取时间，于是查了下几个时间函数的区别
+
+> erlang:universaltime()
+
+``` erlang
+> erlang:universaltime().
+{{1996,11,6},{14,18,43}}
+
+Returns the current date and time according to Universal Time Coordinated (UTC) in the form {{Year, Month, Day}, {Hour, Minute, Second}} if supported by the underlying OS. Otherwise erlang:universaltime() is equivalent to erlang:localtime().
+
+如果底层操作系统支持，则以{{年，月，日}，{小时，分钟，秒}}的形式，按照协调世界时（UTC）返回当前日期和时间。否则erlang：universaltime() 等同于erlang：localtime()。
+```
+
+> erlang:localtime()
+
+``` erlang
+> erlang:localtime().
+{{1996,11,6},{14,45,17}}
+
+Returns the current local date and time, {{Year, Month, Day}, {Hour, Minute, Second}}.
+The time zone and Daylight Saving Time correction depend on the underlying OS.
+
+返回当前的本地日期和时间{{Year，Month，Day}，{Hour，Minute，Second}}.
+时区和夏令时校正取决于底层操作系统.
+```
+
+> os:timestamp()
+
+``` erlang
+timestamp() -> Timestamp
+Timestamp = erlang:timestamp()
+Timestamp = {MegaSecs, Secs, MicroSecs}
+
+
+返回单调的近似系统时间戳，精度可以到微秒
+```
+
+可以看到两边的不同最主要是时间精度的问题，精度越高所消耗的性能也就越高，所以按需选择就好
+
+时间的详细内容涉及太多，之后单独写一篇
+
+ETS相关
+---
+
+注意一下创建ETS的这行代码：
+
+> ?MODULE = ets:new(?MODULE, [set, protected, named_table, {read_concurrency, true}])
+
+用到了 {read_concurrency, true} 这个参数
+
+ETS为了优化并发读写性能，提供了两个参数：write_concurrency / read_concurrency，摘抄一段网上对这两个参数的总结：
+
+write_concurrency（并发写）
+
+可以提高多进程并发写ets的效率。通常来说，ets写数据时整张表是锁定的，其他进程不能进行读写直到前面的操作完成。并发写可以改变这个情况，同一个表中的不同记录可以被多个进程并发读写。有了这个参数，使得ets写记录时表读写锁变成了读锁，就是说，只要不是同一条记录，还可以继续往这个ets表写入数据，提高了并发写效率。但并发写也有弊端，降低数据连续写入的效率和性能。如果有且只有一个进程在读写数据，将会带来一定的开销。而测试发现这个开销比较小，可以忽略。而且，只有一个进程在读写数据的场合比较小。
+
+所以，并发写的适用场合如下：
+
+1. 数据并发读写很频繁
+2. 并发读写的数据量比较少（取记录数）
+
+但是，像这样一次性插入多条记录，ets要保证原子性，并发效率会大打折扣：
+
+> ets:insert(person, [{john, 28}, {lucy, 25}, {tom, 2}]).
+
+另外，这个参数目前不支持 ordered_set 类的ets表
+
+read_concurrency（并发读）
+
+优化ets并发读性能，特别是在多核smp的支持下，读操作变得比较廉价。但是同时也带来一个问题，读写操作之间的切换消耗更多的性能。
+所以，并发读的适用场合如下：
+
+1. 读比写更加频繁
+2. 大量的读少量写，大量的写少量读
+
+什么时候使用这两个参数？
+
+1. 使用write_concurrency参数大多时候是有效的，测试写操作性能提高3~4倍，而且，在单进程写多进程读的场合下也同样适用。如果并发读写次数较少，而且每次都要读取或者写入大量数据就不适合了。
+2. read_concurrency的使用要看场合，并不是高并发就适合。如果每次读的数据和写的数据都很少，而且读写都很频繁，就没必要使用这个参数。如果很少写数据，大多时候都是读数据的话用这个参数就很适用了。另外，如果数据读写频繁，但每次读写的数据都很多，也适当考虑用这个参数。
+3. write_concurrency和read_concurrency可以同时使用，但有一定开销的，适用场合是经常有大量并发读和大量并发写操作。
