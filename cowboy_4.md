@@ -87,6 +87,10 @@ toppage_handler 指的是我们的处理模块的模块名，所有匹配到这�
 
 关于路由匹配的详细规则可以参考官方文档：[routing](https://ninenines.eu/docs/en/cowboy/2.6/guide/routing/)
 
+`cowboy_router:compile(Routes)`
+
+这个方法的作用是将我们提供的路由转换为程序容易使用的形式，通过递归的方式解析每一个路由，最后按照顺序放在list中，由此我们可以大胆猜想，在实际路由匹配的过程中，也是将请求与list中的一一进行模式匹配
+
 ``` erlang
 {ok, _} = cowboy:start_clear(http, [{port, 8080}], #{
         env => #{dispatch => Dispatch}
@@ -97,7 +101,33 @@ toppage_handler 指的是我们的处理模块的模块名，所有匹配到这�
 
 > cowboy:start_clear/3 和  cowboy:start_tls/3 两种
 
-前者是启动基于HTTP协议的服务，后者则基于HTTPS协议
+前者是启动基于HTTP协议的服务，后者则基于HTTPS协议，我们来看下前者的具体实现：
+
+``` erlang
+-spec start_clear(ranch:ref(), ranch:opts(), opts())
+	-> {ok, pid()} | {error, any()}.
+start_clear(Ref, TransOpts0, ProtoOpts0) ->
+	TransOpts1 = ranch:normalize_opts(TransOpts0),
+	{TransOpts, ConnectionType} = ensure_connection_type(TransOpts1),
+	ProtoOpts = ProtoOpts0#{connection_type => ConnectionType},
+	ranch:start_listener(Ref, ranch_tcp, TransOpts, cowboy_clear, ProtoOpts).
+```
+
+这里出现了一个没见过的模块**ranch**，其实这是cowboy的依赖库之一，也是开发cowboy的团队开发的，官网的介绍如下:
+
+> Ranch is a socket acceptor pool for TCP protocols.
+> Ranch aims to provide everything you need to accept TCP connections with a small code base and low latency while being easy to use directly as an application or to embed into your own.
+
+翻译：
+
+> Ranch是TCP协议的套接字接收器池。
+> Ranch旨在提供接受TCP连接所需的一切，具有小代码库和低延迟，同时易于直接用作应用程序或嵌入到您自己的应用程序中。
+
+`ranch:normalize_opts(TransOpts0)` 
+
+TransOpts0这个参数，我们传入的是 **[{port, 8080}]**，这个方法主要是将我们传入的List形式的参数列表转为预设格式的Map，一些socket连接主要的参数将在这一步被抽出构建
+
+接下来也都是构建一些参数，最后调用 **ranch:start_listener/5** 启动监听
 
 有关HTTPS的内容后续再介绍
 

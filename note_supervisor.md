@@ -17,7 +17,7 @@ erlang学习笔记－supervisor 行为模式
 ``` erlang
 init([]) ->
     AChild = {'AName',{'AModule',start_link,[]},
-          permanent,2000,worker,['AModule']},
+        permanent,2000,worker,['AModule']},
     {ok,{{one_for_all,0,1}, [AChild]}}.
 ```
 
@@ -33,9 +33,9 @@ Restart : 这个进程遇到错误之后是否重启
 
 Shutdown 进程如何被干掉,这里是使用整型值2000的意思是,进程在被强制干掉之前有2000毫秒的时间料理后事自行终止.
 
-              实际过程是supervisor给子进程发送一个exit(Pid,shutdown)然后等待exit信号返回,在指定时间没有返回则将子进程使用exit(Child,kill)
-             这里的参数还有 brutal_kill 意思是进程马上就会被干掉
-             infinity :当一个子进程是supervisor那么就要用infinity,意思是给supervisor足够的时间进行重启.
+            实际过程是supervisor给子进程发送一个exit(Pid,shutdown)然后等待exit信号返回,在指定时间没有返回则将子进程使用exit(Child,kill)
+            这里的参数还有 brutal_kill 意思是进程马上就会被干掉
+            infinity :当一个子进程是supervisor那么就要用infinity,意思是给supervisor足够的时间进行重启.
 
 Type 这里只有两个值:supervisor worker ; 只要没有实现supervisor behavior的进程都是worker;
 
