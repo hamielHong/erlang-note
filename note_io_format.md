@@ -16,8 +16,8 @@ format(Format, Data) -> ok
 
 ``` erlang
 -spec format(Format, Data) -> 'ok' when
-      Format :: format(),
-      Data :: [term()].
+    Format :: format(),
+    Data :: [term()].
 
 format(Format, Args) ->
     format(default_output(), Format, Args).
