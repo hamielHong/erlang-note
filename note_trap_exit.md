@@ -74,7 +74,15 @@ exit信号
 
 ![avatar][pic]
 
-除了前面讲到的，还可以看出，不管进程是否有设置 trap_exit，进程被kill时link进程都会收到这个进程的退出消息。只要进程退出，link进程都会收到这个进程退出消息（normal除外），Supervisor就是这样构建起来的。那么，normal可以用来杀掉Supervisor的进程。
+顺便总结一下在Supervisor监督下的gen_server行为与退出方式的关系：
+
+|trap_exit|Exit Action|process die|terminate|restart|
+|-|-|-|-|-|
+|-|{stop,normal, State}|true|true|true|
+|-|exit(Pid, kill)|true|false|true|
+|-|exit(Pid, normal)|false|-|-|
+
+除了前面讲到的，还可以看出，不管进程是否有设置 trap_exit，进程被kill时link进程都会收到这个进程的退出消息。只要进程退出，link进程都会收到这个进程退出消息（normal除外），Supervisor就是这样构建起来的。
 
 拓展链接：[Erlang/OTP 监督者（Supervisor）](https://blog.csdn.net/mycwq/article/details/12690093)、[erlang进程监控：link和monitor](http://blog.csdn.net/mycwq/article/details/13171117)
 
