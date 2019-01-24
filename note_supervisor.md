@@ -27,19 +27,19 @@ Start : 启动参数{M,F,A}
 
 Restart : 这个进程遇到错误之后是否重启
 
-                permanent:遇到任何错误导致进程终止就会重启
-                temporary:进程永远都不会被重启
-                transient: 只有进程异常终止的时候会被重启
+    permanent:遇到任何错误导致进程终止就会重启
+    temporary:进程永远都不会被重启
+    transient: 只有进程异常终止的时候会被重启
 
 Shutdown 进程如何被干掉,这里是使用整型值2000的意思是,进程在被强制干掉之前有2000毫秒的时间料理后事自行终止.
 
-            实际过程是supervisor给子进程发送一个exit(Pid,shutdown)然后等待exit信号返回,在指定时间没有返回则将子进程使用exit(Child,kill)
-            这里的参数还有 brutal_kill 意思是进程马上就会被干掉
-            infinity :当一个子进程是supervisor那么就要用infinity,意思是给supervisor足够的时间进行重启.
+    实际过程是supervisor给子进程发送一个exit(Pid,shutdown)然后等待exit信号返回,在指定时间没有返回则将子进程使用exit(Child,kill)
+    这里的参数还有 brutal_kill 意思是进程马上就会被干掉
+    infinity :当一个子进程是supervisor那么就要用infinity,意思是给supervisor足够的时间进行重启.
 
 Type 这里只有两个值:supervisor worker ; 只要没有实现supervisor behavior的进程都是worker;
 
-                    可以通过supervisor的层级结构来精细化对进程的控制.这个值主要作用是告知监控进程它的子进程是supervisor还是worker
+    可以通过supervisor的层级结构来精细化对进程的控制.这个值主要作用是告知监控进程它的子进程是supervisor还是worker
 
 Modules 是进程依赖的模块,这个信息只有在代码热更新的时候才会被用到:标注了哪些模块需要按照什么顺序进行更新;通常这里只需要列出进程依赖的主模块.
 
