@@ -43,15 +43,15 @@ init([]) ->
 
 ``` erlang
 %% 返回元组格式
-{ok, {Strategy, Procs}}
+{ok, {SupFlags, ChildSpec}}
 
-Strategy = {How, Max, Within}
+SupFlags = {Strategy, Intensity, Period}
 
-How = one_for_one | one_for_all | rest_for_one |simple_one_for_one
-Max = integer() >=0
-Within = integer() >=0
+Strategy = one_for_one | one_for_all | rest_for_one |simple_one_for_one
+Intensity = integer() >= 0
+Period = integer() >= 1
 
-Procs = {Id, StartFunc, Restart, Shutdown, Type, Modules}
+ChildSpec = {Id, StartFunc, Restart, Shutdown, Type, Modules}
 
 Id = term()
 StartFunc = {M, F, A}
@@ -64,9 +64,9 @@ Modules = [Module] | dynamic
 Module = atom()
 ```
 
-Strategy 进程策略：
+SupFlags 进程策略：
 
-* How 重启模式
+* Strategy 重启模式
 
   * one_for_one 如果子进程终止，只有这个进程会被重启
   * one_for_all 如果子进程终止，所有子进程都会被重启
@@ -74,11 +74,11 @@ Strategy 进程策略：
   * simple_one_for_one 简化one_for_one，所有子进程都动态添加同一种进程的实例
   * one_for_one 和 simple_one_for_one 最大的区别在于：one_for_one 用一个列表储存了所有要启动的子进程，并按顺序启动。而simple_one_for_one 用一个进程字典定义所有子进程。所以当一个监督者拥有很多子进程时，遇到进程崩溃，simple_one_for_one 效率会快很多
 
-* Max 最多允许重启次数 0表示不重启
+* Intensity 最多允许重启次数 0表示不重启
 
-* Within 限定重启时间，单位：s（秒）
+* Period 限定重启时间，单位：s（秒）
 
-* 结合起来看就是，在多长时间内（Within）最多允许重启几次（Max），重启的方式为（How），Within 和 Max 的设定意义在于限制最大重启频率，这是为了避免反复重启进入死循环。
+* 结合起来看就是，在多长时间内（Period）最多允许重启几次（Intensity），重启的方式为（Strategy），Period 和 Intensity 的设定意义在于限制最大重启频率，这是为了避免反复重启进入死循环。
 
 Procs 子进程相关：
 
